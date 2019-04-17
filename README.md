@@ -5,5 +5,16 @@ A software tool designed to check influenza protein sequences for a user-defined
   - Single- or multi- residue deletions
   - Sequence motifs
 
+USAGE:
+python mutation_checker.py [PATH_TO_REFERENCE_SEQUENCES] [PATH_TO_MUTATIONS_SPREADSHEET] [PATH_TO_INPUT_FILE]
 
+The reference sequences used only define the numbering by which residue positions are defined. Reference sequences must be in FASTA format, with headers of the form:
+>[STRAIN_NAME] [PROTEIN_NAME]
+The reference sequences needed to check for the CDC mutations can be found in this repository as cdc2012_refs.fa.
 
+The mutations spreadsheet should contain the mutations to be checked for. Multiple mutations placed on the same row of the spreadsheet will only be reported if all are found in a given strain. Some examples of how mutations can be encoded in this spreadsheet include:
+  - PB2:627:K  (searches for a lysine at position 627 of PB2)
+  - NA:10-30:del  (searches for full deletion of the region specified in NA, with respect to the reference provided)
+  - NP:33:del  (searches for a single residue deletion at position 33 of NP)
+  - HA:323-330:mot:R-X-R/K-R  (searches for the given motif anywhere within the region specified in HA)
+The mutation spreadsheet should be in Excel format (.xlsx). The spreadsheet used to check for the CDC mutations can be found in this repository as cdc2012_mutations_list.xlsx.
