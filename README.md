@@ -5,8 +5,8 @@ A software tool designed to check influenza protein sequences for a user-defined
   - Single- or multi- residue deletions
   - Sequence motifs
 
-USAGE:
-python mutation_checker.py [PATH_TO_REFERENCE_SEQUENCES] [PATH_TO_MUTATIONS_SPREADSHEET] [PATH_TO_INPUT_FILE]
+USAGE:  
+./mutation_checker.py [PATH_TO_REFERENCE_SEQUENCES] [PATH_TO_MUTATIONS_SPREADSHEET] [PATH_TO_INPUT_FILE]
 
 The reference sequences used only define the numbering by which residue positions are defined. Reference sequences must be in FASTA format, with headers of the form:
 
