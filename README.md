@@ -21,3 +21,9 @@ The mutations spreadsheet should contain the mutations to be checked for. Multip
 The mutation spreadsheet should be in Excel format (.xlsx). The spreadsheet used to check for the CDC mutations can be found in this repository as cdc2012_mutations_list.xlsx.
 
 The input file should contain protein sequences to be checked in FASTA format. Sequence headers should be in the same form as those for the reference sequences. All sequences should represent complete protein sequences, not partial.
+
+
+DEPENDENCIES:
+
+EMBOSS Needle
+Pandas
