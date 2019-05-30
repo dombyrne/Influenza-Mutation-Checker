@@ -26,4 +26,5 @@ The input file should contain protein sequences to be checked in FASTA format. S
 DEPENDENCIES:
 
 EMBOSS Needle
+
 Pandas
