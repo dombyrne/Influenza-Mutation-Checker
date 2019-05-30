@@ -6,11 +6,11 @@ A software tool designed to check influenza protein sequences for a user-defined
   - Sequence motifs
 
 USAGE:  
-./mutation_checker.py [PATH_TO_REFERENCE_SEQUENCES] [PATH_TO_MUTATIONS_SPREADSHEET] [PATH_TO_INPUT_FILE]
+python mutation_checker.py [PATH_TO_REFERENCE_SEQUENCES] [PATH_TO_MUTATIONS_SPREADSHEET] [PATH_TO_INPUT_FILE] [PATH_FOR_OUTPUT]
 
 The reference sequences used only define the numbering by which residue positions are defined. Reference sequences must be in FASTA format, with headers of the form:
 
-\>[STRAIN_NAME] [PROTEIN_NAME]
+\>[STRAIN_NAME] | [PROTEIN_NAME]
 The reference sequences needed to check for the CDC mutations can be found in this repository as cdc2012_refs.fa.
 
 The mutations spreadsheet should contain the mutations to be checked for. Multiple mutations placed on the same row of the spreadsheet will only be reported if all are found in a given strain. Some examples of how mutations can be encoded in this spreadsheet include:
