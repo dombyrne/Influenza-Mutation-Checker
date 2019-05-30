@@ -1,28 +1,37 @@
-#!/usr/bin/env python
+'''
+Dominic Byrne - May 2019
+Animal and Plant Health Agency
+
+This tool checks a set of protein sequences for a user-defined set of SNPs,
+deletions and sequence motifs, at positions relative to a reference 
+protein sequence. It was originally designed to check influenza protein
+sequences for the CDC H5N1 humanising mutations inventory, however
+any set of user-defined features can be checked for.
+'''
 
 import sys, time, os, subprocess, re
 import pandas as pd
-
+import numpy as np
 
 ref_file = sys.argv[1]
 mut_file = sys.argv[2]
 input_file = sys.argv[3]
+output_file = sys.argv[4]
 
 
 def parse_fasta_file(fasta_file):
 	
 	data = open(fasta_file).read()
-	seqs= [seq for seq in data.split(">") if len(seq.strip()) > 0]
+	seqs = [seq for seq in data.split(">") if len(seq.strip()) > 0]
 	seq_records = {seq.split("\n")[0] : "".join(seq.split("\n")[1:]).upper() 
 				   for seq in seqs}
-	prots = set([head.split()[1] for head in seq_records.keys()])
+	prots = set([head.split("|")[1].strip() for head in seq_records.keys()])
 	seqs_out = {prot : {} for prot in prots}
-	
-	
+
 	for rec in seq_records.keys():
 		
-		prot_name = rec.split()[1].strip()
-		strain = rec.split()[0]
+		prot_name = rec.split("|")[1].strip()
+		strain = rec.split("|")[0].strip().replace(" ","_")
 		seq = seq_records[rec].strip()
 		strain_seq = {strain : seq}
 		seqs_out[prot_name].update(strain_seq)
@@ -137,67 +146,67 @@ def adjust_pos(pos, c, ref_seq):
 
 
 
-def find_mutations(aln_dict, mut_list):
+def find_mutations(row, aln_dict):
 	
-	strains = set([k[0] for k in aln_dict.keys()])
-	out_dict = {strain : [] for strain in strains}
+	#cols = out_frame.columns
+	#strains = set([k[0] for k in aln_dict.keys()])
+	#out_dict = {strain : [] for strain in strains}
 	prots = set([k[1] for k in aln_dict.keys()])
-	for strain in strains:
-		for mut_info in mut_list:
-			mut_info_s = [i for i in mut_info if type(i) != float]
-			effect = mut_info_s[0]
-			ref_name = mut_info_s[1]
-			muts = mut_info_s[2:]
-						
-			results = []
-			for mut in muts:
-				f = mut.split(":")
-				prot = f[0]
-				pos = f[1]
-				change = f[2]
-				
-				if prot not in prots:
-					results.append(False)
-					break
-				
-				r_seq = aln_dict[(strain, prot, ref_name)][0]
-				q_seq = aln_dict[(strain, prot, ref_name)][1]
-				
-				if change == "mot":
-					i_pos = [int(p) - 1 for p in pos.split("-")]
-					pos_adj = [adjust_pos(p, 0, r_seq) for p in i_pos]
-					region = q_seq[pos_adj[0] : pos_adj[1]]
-					motif = convert_motif_to_regex(f[3].split("-"))
-					motif_instances = re.findall(motif, region)
-					if len(motif_instances) > 0:
-						results.append(True)
-					
-				elif change == "del":
-					if "-" in pos:
-						i_pos = [int(p) - 1 for p in pos.split("-")]
-						pos_adj = [adjust_pos(p, 0, r_seq) for p in i_pos]
-						region = list(q_seq[pos_adj[0] : pos_adj[1]])
-						if all(i == "-" for i in region):
-							results.append(True)
-					else:
-						i_pos = int(pos) - 1
-						pos_adj = adjust_pos(i_pos, 0, r_seq) 
-						if q_seq[pos_adj] == "-":
-							results.append(True)
-						
-				else:
-					i_pos = int(pos) - 1
-					pos_adj = adjust_pos(i_pos, 0, r_seq)
-					if q_seq[pos_adj] == change:
-						results.append(True)
-					else:
-						results.append(False)
-					
-			if False not in results and len(results) > 0:
-				out_dict[strain].append((effect, muts))
-	
-	return out_dict
+	strain = row["STRAIN"]
+	#return strain
+	ref_name = row["REF_PROTEIN"]
+	mutations = [str(i) for i in row["MUTATION":] if type(i) == unicode]
+	results = []
+	for mut in mutations:
+		f = mut.split(":")
+		prot = f[0]
+		pos = f[1]
+		change = f[2]
+		
+		if prot not in prots:
+			results.append(False)
+			break
+		
+		r_seq = aln_dict[(strain, prot, ref_name)][0]
+		q_seq = aln_dict[(strain, prot, ref_name)][1]
+		
+		if change == "mot":
+			i_pos = [int(p) - 1 for p in pos.split("-")]
+			pos_adj = [adjust_pos(p, 0, r_seq) for p in i_pos]
+			region = q_seq[pos_adj[0] : pos_adj[1]]
+			motif = convert_motif_to_regex(f[3].split("-"))
+			motif_instances = re.findall(motif, region)
+			if len(motif_instances) > 0:
+				results.append(True)
 			
+		elif change == "del":
+			if "-" in pos:
+				i_pos = [int(p) - 1 for p in pos.split("-")]
+				pos_adj = [adjust_pos(p, 0, r_seq) for p in i_pos]
+				region = list(q_seq[pos_adj[0] : pos_adj[1]])
+				if all(i == "-" for i in region):
+					results.append(True)
+			else:
+				i_pos = int(pos) - 1
+				pos_adj = adjust_pos(i_pos, 0, r_seq) 
+				if q_seq[pos_adj] == "-":
+					results.append(True)
+				
+		else:
+			i_pos = int(pos) - 1
+			pos_adj = adjust_pos(i_pos, 0, r_seq)
+			if q_seq[pos_adj] == change:
+				results.append(True)
+			else:
+				results.append(False)
+			
+	if False not in results and len(results) > 0:
+		return True
+	else:
+		return False
+
+
+	
 
 
 ref_seqs = parse_fasta_file(ref_file)
@@ -209,32 +218,28 @@ for prot in query_seqs.keys():
 		prots_removed.append(prot)
 		del query_seqs[prot]
 
-print "\nN.B: Sequences of the following proteins were not analysed as no relevant reference sequences were provided:"
-print "\n".join(prots_removed)
-		
+if len(prots_removed) > 0:
+	print "\nN.B: Sequences of the following proteins were not analysed as no relevant reference sequences were provided:"
+	print "\n".join(prots_removed)
+
 temp_dir = os.getcwd() + "/temp_mut_dir_" + str(time.time())
 os.mkdir(temp_dir)
 make_temp_seq_files(ref_seqs, query_seqs, temp_dir)
 aligned_combos = align_seqs(ref_seqs, query_seqs, temp_dir)
 alignments = get_alignments(ref_seqs, query_seqs, aligned_combos, temp_dir)
+strains = list(set([k[0] for k in alignments.keys()]))
 mut_df = pd.read_excel(mut_file)
-mutations = mut_df.values.tolist()
-mutations_found = find_mutations(alignments, mutations)
+len_df = len(mut_df.index)
+out_df = pd.concat([mut_df]*len(strains), ignore_index=True)
+out_df.insert(0, "STRAIN", np.nan)
 
-'''Output'''
-for strain in mutations_found.keys():
-	muts = mutations_found[strain]
-	print "\n" + strain
-	for mut in muts:
-		effect = mut[0]
-		changes = mut[1]
-		v_changes = []
-		for change in changes:
-			f = change.split(":")
-			if f[2] == "mot":
-				del f[2]
-			v_changes.append(" ".join(f))
-		str_changes = ", ".join(v_changes)
-		print u'{:75.70}{:30.30}'.format(effect, str_changes)
+for i, strain in enumerate(strains):
+	out_df.loc[i*len_df : (i+1)*len_df - 1, "STRAIN"] = strain
 
+mutations_found = out_df[out_df.apply(find_mutations, aln_dict = alignments, axis = 1)].set_index("STRAIN")
+mutations_found.columns = [i if "Unnamed:" not in i else "" for i in mutations_found.columns]
+mutations_found.to_excel(output_file)
+
+
+#Comment out the last line if you want to view the alignments created
 os.system("rm -r " + temp_dir)
