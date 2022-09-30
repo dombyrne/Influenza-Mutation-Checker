@@ -3,7 +3,7 @@ A script designed to check influenza protein sequences for a user-defined set of
 
   - Single amino acid substitutions
   - Single- or multi- amino acid deletions
-  - Aminon acid sequence motifs
+  - Amino acid sequence motifs
 
 USAGE:
 ```
