@@ -15,7 +15,7 @@ from collections import Counter
 import pandas as pd
 import numpy as np
 
-def load_mutations(f, illegal_cols = ['STRAIN']):
+def load_mutations(f, mut_tb_cols, illegal_cols=['STRAIN']):
     #load the file
     tb = pd.read_excel(f)
     
@@ -23,6 +23,11 @@ def load_mutations(f, illegal_cols = ['STRAIN']):
     for col in illegal_cols:
         if col in tb.columns:
             raise Exception(f'The mutation table contained an illegal column name: {col}.\nThe following column names are not permitted in the mutation table:\n' + '\n'.join(illegal_cols))
+            
+    #check for missing mutations
+    no_mutation = tb[mut_tb_cols['mut']].isnull()
+    if no_mutation.any():
+        raise Exception(f'No mutations found on the following rows of the mutations table:\n{tb[no_mutation]}')
     return tb
 
 def load_ref_seqs(f, mutations, mut_tb_cols, ignore_missing_refs):
@@ -400,7 +405,7 @@ if os.path.isfile(args.output) and not args.overwrite:
     raise FileExistsError(f'Output file {args.output} already exists. Use --overwrite to ignore and overwrite.')
 
 #read table of mutations to check for
-mutations = load_mutations(args.mutations)
+mutations = load_mutations(args.mutations, mut_tb_cols)
 print(f'\nLoaded {mutations.index.size} mutations.\n')
 
 #load reference sequences
