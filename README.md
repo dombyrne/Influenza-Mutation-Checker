@@ -18,7 +18,7 @@ python mutation_checker.py --help
 
 The reference sequences used define the numbering by which residue positions are defined. Reference sequences must be in FASTA format, with headers of the form:
 
-\>[STRAIN_NAME]|[PROTEIN_NAME]
+\>[STRAIN_NAME] | [PROTEIN_NAME]
 
 The reference sequences needed to check for the CDC mutations can be found in this repository as cdc2012_refs.fa.
 
