@@ -234,13 +234,17 @@ def get_mutations_in_strain(strain, mut_df, aln, mut_cols):
     
     #make output with all the mutations in this strain
     strain_tb = mut_df.loc[strain_mut_idx]
+        
+    #add effect col if argument supplied
     strain_tb['STRAIN'] = strain
     
-    #remove missing column names and reorder columns 
-    strain_tb.columns = [i if "Unnamed:" not in i else "" for i in strain_tb.columns]
-    n_cols = len(strain_tb.columns)
-    new_col_idx = [n_cols-1] + [i for i in range(1, n_cols-1)]
-    return strain_tb.iloc[:, new_col_idx]
+    #remove missing column names
+    new_cols = [i if "Unnamed:" not in i else "" for i in strain_tb.columns]
+    strain_tb.columns = new_cols
+    
+    #move strain col to the front
+    new_col_order = [new_cols[-1]] + new_cols[:-1]
+    return strain_tb[new_col_order]
     
 def check_mutations(q_strain, mutations, r_strain, aln):
     
@@ -429,6 +433,8 @@ alignments = get_alignments(aln_pairs, strain_ids, args.temp_dir, args.needle_go
 #check all the query protein sequences for the mutations
 print('Checking sequences for mutations...')
 mutations_found = find_mutations(mutations, alignments, mut_tb_cols)
+
+print(mutations_found)
 
 #save results to file
 print('Saving identified mutations to file...\n')
